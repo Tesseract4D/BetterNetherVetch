@@ -6,6 +6,7 @@ public class BNVCoreMod extends HookLoader {
 
     @Override
     protected void registerHooks() {
-        registerHookContainer(BNVHook.class.getName());
+        registerHookContainer(NetherHook.class.getName());
+        registerHookContainer(NetherliciousHook.class.getName());
     }
 }

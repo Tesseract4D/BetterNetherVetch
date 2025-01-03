@@ -1,7 +1,6 @@
 package cn.tesseract.bnv.world.generator.terrain;
 
 import cn.tesseract.bnv.BNV;
-import cn.tesseract.bnv.Identifier;
 import cn.tesseract.bnv.noise.FractalNoise;
 import cn.tesseract.bnv.noise.PerlinNoise;
 import cn.tesseract.bnv.noise.VoronoiNoise;
@@ -12,12 +11,12 @@ import org.joml.Vector2i;
 
 import java.util.*;
 
-public class TerrainMap extends DataMap<Identifier> {
-    private static final Identifier DEFAULT_TERRAIN = BNV.id("plains");
+public class TerrainMap extends DataMap<String> {
+    private static final String DEFAULT_TERRAIN = BNV.id("plains");
     private static final Vector2i[] OFFSETS;
     private static final float MULTIPLIER;
 
-    private final EnumMap<TerrainRegion, List<Identifier>> regionTerrain = new EnumMap<>(TerrainRegion.class);
+    private final EnumMap<TerrainRegion, List<String>> regionTerrain = new EnumMap<>(TerrainRegion.class);
     private final FractalNoise oceanNoise = new FractalNoise(PerlinNoise::new);
     private final FractalNoise mountainNoise = new FractalNoise(PerlinNoise::new);
     private final VoronoiNoise bridgesNoise = new VoronoiNoise();
@@ -34,19 +33,19 @@ public class TerrainMap extends DataMap<Identifier> {
     }
 
     @Override
-    protected String serialize(Identifier value) {
-        return value.toString();
+    protected String serialize(String value) {
+        return value;
     }
 
     @Override
-    protected Identifier deserialize(String name) {
-        return new Identifier(name);
+    protected String deserialize(String name) {
+        return name;
     }
 
     @Override
-    public Identifier generateData(int x, int z) {
+    public String generateData(int x, int z) {
         TerrainRegion region = getRegionInternal(x, z);
-        List<Identifier> list = regionTerrain.get(region);
+        List<String> list = regionTerrain.get(region);
         if (list.isEmpty()) return DEFAULT_TERRAIN;
         int index = (int) Math.floor(cellNoise.getID(x * 0.1, z * 0.1) * list.size());
         return list.get(index);
@@ -61,14 +60,14 @@ public class TerrainMap extends DataMap<Identifier> {
         cellNoise.setSeed(random.nextInt());
     }
 
-    public void addTerrain(Identifier terrainID, TerrainRegion region) {
+    public void addTerrain(String terrainID, TerrainRegion region) {
         regionTerrain.get(region).add(terrainID);
     }
 
-    public void getDensity(int x, int z, Reference2FloatMap<Identifier> data) {
+    public void getDensity(int x, int z, Reference2FloatMap<String> data) {
         data.clear();
         for (Vector2i offset : OFFSETS) {
-            Identifier sdf = getData(x + offset.x, z + offset.y);
+            String sdf = getData(x + offset.x, z + offset.y);
             float value = data.getOrDefault(sdf, 0.0F) + MULTIPLIER;
             data.put(sdf, value);
         }

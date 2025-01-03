@@ -1,6 +1,5 @@
 package cn.tesseract.bnv.world.generator.terrain;
 
-import cn.tesseract.bnv.Identifier;
 import cn.tesseract.bnv.world.generator.BNBWorldGenerator;
 import cn.tesseract.bnv.world.generator.terrain.features.TerrainFeature;
 import it.unimi.dsi.fastutil.objects.Reference2FloatMap;
@@ -9,18 +8,19 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Supplier;
 
 public class ChunkTerrainMap implements TerrainSDF {
-    private static final Reference2ObjectMap<Identifier, Supplier<TerrainFeature>> CONSTRUCTORS = new Reference2ObjectOpenHashMap<>();
+    private static final Reference2ObjectMap<String, Supplier<TerrainFeature>> CONSTRUCTORS = new Reference2ObjectOpenHashMap<>();
     private static final List<Supplier<TerrainFeature>> COMMON_CONSTRUCTORS = new ArrayList<>();
 
-    private final Reference2ObjectMap<Identifier, TerrainFeature> features = new Reference2ObjectOpenHashMap<>();
+    private final HashMap<String, TerrainFeature> features = new HashMap<>();
     private final List<TerrainFeature> commonFeatures = new ArrayList<>();
 
     @SuppressWarnings("unchecked")
-    private static final Reference2FloatMap<Identifier>[] FEATURE_DENSITY = new Reference2FloatMap[32];
+    private static final Reference2FloatMap<String>[] FEATURE_DENSITY = new Reference2FloatMap[32];
 
     private static int posX;
     private static int posZ;
@@ -55,7 +55,7 @@ public class ChunkTerrainMap implements TerrainSDF {
             if ((dx + dz & 1) == 1) continue;
             dx = (byte) ((dx << 2) - 4);
             dz = (byte) ((dz << 2) - 4);
-            Reference2FloatMap<Identifier> density = FEATURE_DENSITY[i >> 1];
+            Reference2FloatMap<String> density = FEATURE_DENSITY[i >> 1];
             map.getDensity(dx + x, dz + z, density);
         }
     }
@@ -64,9 +64,8 @@ public class ChunkTerrainMap implements TerrainSDF {
     public float getDensity(int x, int y, int z) {
         float result = -100.0F;
 
-        Reference2FloatMap<Identifier> density = FEATURE_DENSITY[getIndex(x, z)];
-        System.out.println("&" + features);
-        for (Identifier id : density.keySet()) {
+        Reference2FloatMap<String> density = FEATURE_DENSITY[getIndex(x, z)];
+        for (String id : density.keySet()) {
             result = features.get(id).getAndMixDensity(result, x, y, z, density.getFloat(id));
         }
 
@@ -77,7 +76,7 @@ public class ChunkTerrainMap implements TerrainSDF {
         return result;
     }
 
-    public static void addFeature(Identifier id, Supplier<TerrainFeature> constructor) {
+    public static void addFeature(String id, Supplier<TerrainFeature> constructor) {
         CONSTRUCTORS.put(id, constructor);
     }
 

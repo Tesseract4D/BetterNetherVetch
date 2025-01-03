@@ -11,9 +11,10 @@ public class BNV {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         LOGGER = e.getModLog();
+
     }
 
-    public static Identifier id(String name) {
-        return new Identifier("bnv:" + name);
+    public static String id(String name) {
+        return "bnv:" + name;
     }
 }

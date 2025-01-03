@@ -2,18 +2,18 @@ package cn.tesseract.bnv.world.generator;
 
 import cn.tesseract.bnv.BNV;
 import cn.tesseract.bnv.BNVMath;
-import cn.tesseract.bnv.Identifier;
 import cn.tesseract.bnv.world.generator.terrain.ChunkTerrainMap;
 import cn.tesseract.bnv.world.generator.terrain.CrossInterpolationCell;
 import cn.tesseract.bnv.world.generator.terrain.TerrainMap;
 import cn.tesseract.bnv.world.generator.terrain.TerrainRegion;
 import cn.tesseract.bnv.world.generator.terrain.features.*;
+import cn.tesseract.bnv.world.generator.terrain.features.legacy.PancakesFeature;
+import cn.tesseract.mycelium.world.ChunkPrimer;
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.storage.ISaveHandler;
 
 import java.util.ArrayList;
@@ -28,14 +28,13 @@ public class BNBWorldGenerator {
     private static final ChunkTerrainMap[] FEATURE_MAPS = new ChunkTerrainMap[16];
     private static final byte[][] BLOCKS = new byte[16][4096];
 
-    private static final List<ObjectObjectImmutablePair<Identifier, TerrainRegion>> MAP_FEATURES = new ArrayList<>();
+    private static final List<ObjectObjectImmutablePair<String, TerrainRegion>> MAP_FEATURES = new ArrayList<>();
     private static final Block NETHERRACK = Blocks.netherrack;
     private static final Block BEDROCK = Blocks.bedrock;
     private static final Block LAVA = Blocks.lava;
     private static final Random RANDOM = new Random();
-
     private static ThreadLocal<TerrainMap> mapCopies;
-    private static ExtendedBlockStorage[] sections;
+    private static ChunkPrimer primer;
     private static int startX;
     private static int startZ;
 
@@ -60,15 +59,20 @@ public class BNBWorldGenerator {
     }
 
     public static Chunk makeChunk(World level, int cx, int cz) {
-        Chunk chunk = new Chunk(level, cx, cz);
-        sections = chunk.storageArrays;
+        return new Chunk(level, makeBlocks(level, cx, cz), new byte[65536], cx, cz);
+    }
+
+    public static Block[] makeBlocks(World level, int cx, int cz) {
+        Block[] blocks = new Block[65536];
+        primer = new ChunkPrimer(blocks);
+
         startX = cx << 4;
         startZ = cz << 4;
         ChunkTerrainMap.prepare(startX, startZ);
-        IntStream.range(0, sections.length).parallel().forEach(BNBWorldGenerator::fillBlocksData);
+        IntStream.range(0, 16).parallel().forEach(BNBWorldGenerator::fillBlocksData);
         fixGenerationErrors();
-        IntStream.range(0, sections.length).parallel().forEach(BNBWorldGenerator::fillSection);
-        return chunk;
+        IntStream.range(0, 16).parallel().forEach(BNBWorldGenerator::fillSection);
+        return blocks;
     }
 
     private static void fillBlocksData(int index) {
@@ -201,9 +205,6 @@ public class BNBWorldGenerator {
     private static void fillSection(int index) {
         byte[] blocks = BLOCKS[index];
 
-        ExtendedBlockStorage section = new ExtendedBlockStorage(index, false);
-        sections[index] = section;
-
         for (short i = 0; i < 4096; i++) {
             if (blocks[i] < 2) continue;
             byte x = (byte) (i & 15);
@@ -214,10 +215,8 @@ public class BNBWorldGenerator {
                 case 4 -> BEDROCK;
                 default -> NETHERRACK;
             };
-            section.func_150818_a(x, y, z, state);
-            if (blocks[i] == 3) {
-                section.setExtBlocklightValue(x, y, z, 15);
-            }
+
+            primer.setBlockState(x, y + (index << 4), z, state);
         }
     }
 
@@ -233,7 +232,7 @@ public class BNBWorldGenerator {
         return y << 8 | z << 4 | x;
     }
 
-    private static void addFeature(Identifier id, Supplier<TerrainFeature> constructor, TerrainRegion... regions) {
+    private static void addFeature(String id, Supplier<TerrainFeature> constructor, TerrainRegion... regions) {
         ChunkTerrainMap.addFeature(id, constructor);
         for (TerrainRegion region : regions) {
             MAP_FEATURES.add(new ObjectObjectImmutablePair<>(id, region));
@@ -248,7 +247,7 @@ public class BNBWorldGenerator {
         addFeature(BNV.id("plains"), PlainsFeature::new, TerrainRegion.PLAINS);
         addFeature(BNV.id("arches"), ArchesFeature::new, TerrainRegion.PLAINS);
         addFeature(BNV.id("flat_hills"), FlatHillsFeature::new, TerrainRegion.HILLS);
-        //addFeature(BNV.id("bridges"), BridgesFeature::new, TerrainRegion.BRIDGES);
+        addFeature(BNV.id("bridges"), BridgesFeature::new, TerrainRegion.BRIDGES);
         addFeature(BNV.id("flat_mountains"), FlatMountainsFeature::new, TerrainRegion.MOUNTAINS);
         addFeature(BNV.id("shore"), ShoreFeature::new, TerrainRegion.SHORE_NORMAL);
         addFeature(BNV.id("flat_ocean"), FlatOceanFeature::new, TerrainRegion.OCEAN_NORMAL, TerrainRegion.OCEAN_MOUNTAINS, TerrainRegion.BRIDGES);
@@ -257,12 +256,13 @@ public class BNBWorldGenerator {
         addFeature(BNV.id("cubes"), CubesFeature::new, TerrainRegion.HILLS, TerrainRegion.MOUNTAINS);
         addFeature(BNV.id("ocean_pillars"), OceanPillarsFeature::new, TerrainRegion.OCEAN_MOUNTAINS);
         addFeature(BNV.id("land_pillars"), LandPillarsFeature::new, TerrainRegion.MOUNTAINS);
+        addFeature(BNV.id("pancakes"), PancakesFeature::new, TerrainRegion.MOUNTAINS);
 
         ChunkTerrainMap.addCommonFeature(BigPillarsFeature::new);
         ChunkTerrainMap.addCommonFeature(ThinPillarsFeature::new);
         ChunkTerrainMap.addCommonFeature(StalactitesFeature::new);
         ChunkTerrainMap.addCommonFeature(StraightThinPillarsFeature::new);
-        ChunkTerrainMap.addCommonFeature(TunnelsFeature::new);
+        //ChunkTerrainMap.addCommonFeature(TunnelsFeature::new);
         ChunkTerrainMap.addCommonFeature(RiversFeature::new);
 
         mapCopies = ThreadLocal.withInitial(() -> {

@@ -2,7 +2,7 @@ package cn.tesseract.bnv.world.generator.terrain.features;
 
 import cn.tesseract.bnv.BNV;
 import cn.tesseract.bnv.BNVMath;
-import cn.tesseract.bnv.Identifier;
+
 import cn.tesseract.bnv.noise.FractalNoise;
 import cn.tesseract.bnv.noise.PerlinNoise;
 import cn.tesseract.bnv.noise.SDFScatter2D;
@@ -14,7 +14,7 @@ import org.joml.Vector3d;
 import java.util.Random;
 
 public class ArchesFeature extends TerrainFeature {
-    private static final Identifier FEATURE_ID = BNV.id("arches");
+    private static final String FEATURE_ID = BNV.id("arches");
     private final SDFScatter2D scatter = new SDFScatter2D(this::getArches);
     private final FractalNoise noise = new FractalNoise(PerlinNoise::new);
     private final PerlinNoise distortionX = new PerlinNoise();
