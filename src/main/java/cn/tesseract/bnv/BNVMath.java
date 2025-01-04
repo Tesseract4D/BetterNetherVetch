@@ -8,7 +8,7 @@ public class BNVMath extends MathHelper {
     }
 
     public static float lerp(double delta, float start, float end) {
-        return (float)((double)start + (double)(end - start) * delta);
+        return start + (end - start) * (float) delta;
     }
 
     public static double lerp(double delta, double start, double end) {

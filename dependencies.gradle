@@ -39,4 +39,5 @@ dependencies {
     implementation "maven.modrinth:gtnhlib:0.6.0:dev"
     implementation "maven.modrinth:unimixins:1.7.10-0.1.19"
     implementation "curse.maven:netherlicious-385860:4363437"
+    implementation "maven.modrinth:biomes-o-plenty:2.1.0.2308"
 }

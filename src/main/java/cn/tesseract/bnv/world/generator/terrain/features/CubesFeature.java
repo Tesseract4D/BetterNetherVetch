@@ -58,7 +58,7 @@ public class CubesFeature extends TerrainFeature {
     private float getCubesFloor(int seed, Vector3d relativePos, Vector3d worldPos) {
         int px = BNVMath.floor_double(worldPos.x / 0.03);
         int pz = BNVMath.floor_double(worldPos.z / 0.03);
-        if (map != null && map.getData(px, pz) != FEATURE_ID) {
+        if (map != null && !map.getData(px, pz).equals(FEATURE_ID)) {
             return 0;
         }
 

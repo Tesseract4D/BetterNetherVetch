@@ -26,5 +26,6 @@ public class NetherliciousHook {
     @Hook(injectOnExit = true)
     public static void init(WorldgenConfiguration c, File targ) {
         WorldgenConfiguration.BigNether = true;
+        WorldgenConfiguration.FoxfireLavaOcean = true;
     }
 }

@@ -256,7 +256,7 @@ public class BNBWorldGenerator {
         addFeature(BNV.id("cubes"), CubesFeature::new, TerrainRegion.HILLS, TerrainRegion.MOUNTAINS);
         addFeature(BNV.id("ocean_pillars"), OceanPillarsFeature::new, TerrainRegion.OCEAN_MOUNTAINS);
         addFeature(BNV.id("land_pillars"), LandPillarsFeature::new, TerrainRegion.MOUNTAINS);
-        addFeature(BNV.id("pancakes"), PancakesFeature::new, TerrainRegion.MOUNTAINS);
+        //addFeature(BNV.id("pancakes"), PancakesFeature::new, TerrainRegion.MOUNTAINS);
 
         ChunkTerrainMap.addCommonFeature(BigPillarsFeature::new);
         ChunkTerrainMap.addCommonFeature(ThinPillarsFeature::new);
